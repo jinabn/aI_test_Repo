@@ -1,7 +1,115 @@
 # CRM AI Automation Framework
 
-End-to-end automation framework for **Microsoft Dynamics 365 CRM** built with **Playwright + TypeScript**.  
-AI-powered test case generation reads Azure DevOps user stories and produces ready-to-run Playwright spec files, then links the test cases back to the original tickets.
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5.4-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Playwright](https://img.shields.io/badge/Playwright-1.45.3-green?logo=playwright)](https://playwright.dev/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green?logo=node.js)](https://nodejs.org/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Azure DevOps](https://img.shields.io/badge/Azure%20DevOps-Integrated-blue?logo=azuredevops)](https://dev.azure.com/NthDegree-Enterprise-Apps)
+[![Allure](https://img.shields.io/badge/Allure-Reports-orange?logo=allure)](https://allurereport.org/)
+
+End-to-end automation framework for **Microsoft Dynamics 365 CRM** and **Inventory Management** built with **Playwright + TypeScript**.
+
+🤖 **AI-Powered** (Optional): Generates test cases from Azure DevOps work items  
+🔄 **Manual Workflow** (No AI): Create tests from tickets without AI  
+📊 **Full Azure DevOps Integration**: Creates & links test cases automatically  
+🎯 **Page Object Model**: Maintainable and scalable architecture  
+📈 **Allure Reports**: Beautiful HTML test reports  
+🐳 **Docker Ready**: Containerized execution support  
+🔧 **CI/CD**: GitHub Actions pipeline included
+
+---
+
+## 📋 Table of Contents
+
+- [Features](#-features)
+- [Quick Start](#-quick-start)
+- [Manual Workflow (No AI)](#-manual-workflow-no-ai)
+- [Architecture](#-architecture-overview)
+- [Documentation](#-documentation)
+- [Running Tests](#-running-tests)
+- [Contributing](#-contributing)
+
+---
+
+## ✨ Features
+
+- ✅ **Manual Test Creation** - No AI required, works out of the box
+- ✅ **Azure DevOps Integration** - Creates & links test cases automatically
+- ✅ **Page Object Model** - Clean, maintainable test architecture
+- ✅ **Session Management** - Login once, reuse for 12 hours
+- ✅ **Test Data Factory** - Unique AUTO-TEST prefixed data
+- ✅ **Allure Reporting** - Beautiful HTML reports
+- ✅ **CI/CD Ready** - GitHub Actions pipeline included
+- ✅ **Docker Support** - Containerized execution
+- ✅ **TypeScript** - Full type safety
+- ✅ **BDD Layer** - Optional Cucumber support
+
+---
+
+## 🚀 Quick Start
+
+### 1. Clone & Install
+
+```bash
+git clone https://github.com/jinabn/aI_test_Repo.git
+cd aI_test_Repo
+npm install
+npx playwright install chromium
+```
+
+### 2. Configure Environment
+
+```bash
+# Windows
+copy .env.example .env
+
+# Mac/Linux
+cp .env.example .env
+```
+
+Edit `.env` and add your credentials (see `.env.example` for all options).
+
+### 3. Run Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run with visible browser
+npm test -- --headed
+
+# Run specific module
+npm test tests/inventory
+
+# Generate report
+npm run allure:serve
+```
+
+---
+
+## 🔄 Manual Workflow (No AI)
+
+Create tests from Azure DevOps tickets **without** AI:
+
+```bash
+# Create test case from Azure ticket
+npm run manual:workflow -- --id=5827
+
+# This will:
+# 1. Fetch work item from Azure DevOps
+# 2. Create test case in Azure DevOps  
+# 3. Link test case to work item
+# 4. Generate test spec template
+# 5. Generate page object template
+```
+
+Then implement the generated files and run:
+
+```bash
+npm test tests/inventory/your-test.spec.ts -- --headed
+```
+
+📚 **Full Guide:** [Manual Workflow Documentation](docs/manual-workflow-guide.md)
 
 ---
 
@@ -373,3 +481,156 @@ steps:
 **TypeScript errors after generation**
 - Run `npm run typecheck` to see all errors
 - Generated code references `ContactsPage`, `AccountsPage`, `LeadsPage` — ensure the correct page is imported for your entity
+
+
+---
+
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [Project Summary](docs/project-summary.md) | Complete project overview & achievements |
+| [Quick Reference](docs/quick-reference.md) | Daily commands & workflows |
+| [Manual Workflow Guide](docs/manual-workflow-guide.md) | Step-by-step manual test creation |
+| [Architecture](docs/architecture.md) | System design & architecture |
+| [Coding Standards](docs/coding-standards.md) | Code conventions & best practices |
+| [Execution Guide](docs/execution-guide.md) | How to run tests |
+| [Onboarding Guide](docs/onboarding-guide.md) | Team onboarding steps |
+
+---
+
+## 🏗️ Project Structure
+
+```
+├── .github/workflows/     # CI/CD pipelines
+├── .kiro/steering/        # AI agent instructions
+├── docs/                  # Documentation
+├── docker/                # Docker configs
+├── features/              # BDD feature files (optional)
+├── src/
+│   ├── ai/               # AI test generation (optional)
+│   ├── azure/            # Azure DevOps integration
+│   ├── pages/            # Page Objects (POM)
+│   │   ├── crm/         # CRM page objects
+│   │   └── inventory/   # Inventory page objects
+│   ├── types/            # TypeScript interfaces
+│   └── utils/            # Helpers (auth, logger, screenshots)
+├── step-definitions/      # BDD steps (optional)
+└── tests/
+    ├── auth/             # Authentication setup
+    ├── crm/              # CRM tests
+    └── inventory/        # Inventory tests
+```
+
+---
+
+## 🤝 Contributing
+
+### Branching Strategy
+
+```bash
+# Create feature branch
+git checkout -b feature/US-<ticket-id>-description
+
+# Or for bugs
+git checkout -b fix/BUG-<ticket-id>-description
+```
+
+### Commit Convention
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+feat(contacts): add create contact functionality
+fix(auth): resolve session timeout issue
+test(leads): add lead qualification tests
+docs(readme): update installation steps
+```
+
+### Pull Request Process
+
+1. Ensure all tests pass: `npm test`
+2. Run TypeScript check: `npm run typecheck`
+3. Generate Allure report: `npm run allure:serve`
+4. Create PR with:
+   - Clear title: `[US-1234] Feature description`
+   - Link to Azure DevOps work item
+   - Screenshots/videos if UI changes
+   - Test results summary
+
+---
+
+## 🐛 Known Issues
+
+### CRM Authentication Timeout
+
+**Issue:** CRM (OASIS app) authentication times out  
+**Status:** ⚠️ Fix in progress  
+**Workaround:** Skip CRM auth in `tests/auth/auth.setup.ts` (currently implemented)
+
+### AI Workflow Blocked
+
+**Issue:** Azure OpenAI resource not provisioned  
+**Status:** ⚠️ Waiting for IT  
+**Workaround:** Use manual workflow (no AI needed)
+
+---
+
+## 📊 Test Coverage
+
+| Module | Status | Coverage |
+|--------|--------|----------|
+| **CRM Module** | ✅ Partial | 3/6 entities (50%) |
+| **Inventory Module** | ✅ Partial | 1/8 workflows (12%) |
+| **Azure DevOps Integration** | ✅ Complete | 100% |
+| **Authentication** | ⚠️ Partial | Inventory works |
+| **Reporting** | ✅ Complete | 100% |
+
+---
+
+## 🎯 Roadmap
+
+### High Priority
+- [ ] Fix CRM authentication
+- [ ] Complete Inventory module (7 more workflows)
+- [ ] Add CRM entities (Opportunities, Cases, Activities)
+- [ ] Provision Azure OpenAI
+
+### Medium Priority
+- [ ] Interactive CLI for test case creation
+- [ ] Test data cleanup script
+- [ ] Enhanced Allure reports
+- [ ] Nightly test runs
+
+### Low Priority
+- [ ] Visual regression testing
+- [ ] API testing layer
+- [ ] Cross-browser support
+- [ ] Performance testing
+
+---
+
+## 📞 Support
+
+- **Azure DevOps:** [NthDegree Enterprise Apps](https://dev.azure.com/NthDegree-Enterprise-Apps/Projected%20Stock%20System)
+- **Issues:** [GitHub Issues](https://github.com/jinabn/aI_test_Repo/issues)
+- **Documentation:** [docs/](docs/)
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- Built with [Playwright](https://playwright.dev/)
+- Reports powered by [Allure](https://allurereport.org/)
+- CI/CD with [GitHub Actions](https://github.com/features/actions)
+- Azure DevOps integration via [REST API](https://learn.microsoft.com/en-us/rest/api/azure/devops/)
+
+---
+
+**Made with ❤️ by the NthDegree QA Team**
