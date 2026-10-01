@@ -1,0 +1,34 @@
+node_modules/
+.env
+.env.local
+.env.*.local
+test-results/
+playwright-report/
+.playwright/
+dist/
+*.js.map
+auth-state/
+**/*.storageState.json
+allure-results/
+allure-report/
+bdd-results/
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Credentials & sensitive data
+**/credentials.json
+**/secrets.*
+**/*.pem
+**/*.key

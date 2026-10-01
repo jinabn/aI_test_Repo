@@ -1,0 +1,119 @@
+version: '3.8'
+
+# ─── Shared environment variables (loaded from .env at project root) ─────────
+x-common-env: &common-env
+  DYN365_BaseURL: ${DYN365_BaseURL}
+  DYN365_TEST_ORG_URL: ${DYN365_TEST_ORG_URL}
+  DYN365_USER_NAME: ${DYN365_USER_NAME}
+  DYN365_PASSWORD: ${DYN365_PASSWORD}
+  DYN365_TEST_USER_NAME: ${DYN365_TEST_USER_NAME}
+  DYN365_TEST_PASSWORD: ${DYN365_TEST_PASSWORD}
+  INVENTORY_MGMT_URL: ${INVENTORY_MGMT_URL}
+  INVENTORY_MGMT_USER_NAME: ${INVENTORY_MGMT_USER_NAME}
+  INVENTORY_MGMT_PASSWORD: ${INVENTORY_MGMT_PASSWORD}
+  AZURE_DEVOPS_ORG: ${AZURE_DEVOPS_ORG}
+  AZURE_DEVOPS_PROJECT: ${AZURE_DEVOPS_PROJECT}
+  AZURE_DEVOPS_PAT: ${AZURE_DEVOPS_PAT}
+  AI_PROVIDER: ${AI_PROVIDER}
+  AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT}
+  AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
+  AZURE_OPENAI_DEPLOYMENT: ${AZURE_OPENAI_DEPLOYMENT}
+  AZURE_OPENAI_API_VERSION: ${AZURE_OPENAI_API_VERSION}
+  HEADLESS: 'true'
+  CI: 'true'
+  DEFAULT_TIMEOUT: '60000'
+
+services:
+
+  # ── Auth setup (must complete before any test service) ─────────────────────
+  setup:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: crm-automation:latest
+    container_name: crm-setup
+    environment:
+      <<: *common-env
+    command: ["npx", "playwright", "test", "--project=setup"]
+    volumes:
+      - auth-state:/app/auth-state
+    networks:
+      - automation
+
+  # ── CRM tests ──────────────────────────────────────────────────────────────
+  playwright:
+    image: crm-automation:latest
+    container_name: crm-tests
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    environment:
+      <<: *common-env
+    command: ["npx", "playwright", "test", "--project=crm-chromium"]
+    volumes:
+      - auth-state:/app/auth-state
+      - test-results:/app/test-results
+      - allure-results:/app/allure-results
+      - playwright-report:/app/playwright-report
+    networks:
+      - automation
+
+  # ── BDD / Cucumber tests ───────────────────────────────────────────────────
+  cucumber:
+    image: crm-automation:latest
+    container_name: crm-bdd
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    environment:
+      <<: *common-env
+    command: ["npm", "run", "test:bdd"]
+    volumes:
+      - auth-state:/app/auth-state
+      - bdd-results:/app/bdd-results
+    networks:
+      - automation
+
+  # ── AI test case sync ──────────────────────────────────────────────────────
+  ai-sync:
+    image: crm-automation:latest
+    container_name: crm-ai-sync
+    environment:
+      <<: *common-env
+    command: ["npm", "run", "sync:azure"]
+    volumes:
+      - generated-specs:/app/tests
+    networks:
+      - automation
+    profiles:
+      - sync   # only runs when: docker-compose --profile sync up ai-sync
+
+  # ── Allure report server ───────────────────────────────────────────────────
+  allure:
+    image: frankescobar/allure-docker-service:latest
+    container_name: crm-allure
+    ports:
+      - "5050:5050"
+    environment:
+      CHECK_RESULTS_EVERY_SECONDS: 3
+      KEEP_HISTORY: 25
+    volumes:
+      - allure-results:/app/allure-results
+      - allure-report:/app/default-reports
+    networks:
+      - automation
+    profiles:
+      - report   # only runs when: docker-compose --profile report up allure
+
+volumes:
+  auth-state:
+  test-results:
+  allure-results:
+  allure-report:
+  playwright-report:
+  bdd-results:
+  generated-specs:
+
+networks:
+  automation:
+    driver: bridge

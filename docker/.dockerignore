@@ -1,0 +1,12 @@
+node_modules
+.env
+auth-state
+test-results
+allure-results
+allure-report
+playwright-report
+bdd-results
+dist
+.git
+.github
+*.log

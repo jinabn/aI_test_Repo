@@ -1,0 +1,84 @@
+name: AI Test Case Sync (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      work_item_id:
+        description: 'Azure DevOps Work Item ID'
+        required: true
+        type: string
+      app_context:
+        description: 'Application to generate tests for'
+        required: true
+        default: 'CRM'
+        type: choice
+        options:
+          - CRM
+          - InventoryManagement
+      dry_run:
+        description: 'Dry run — generate files only, do NOT push to Azure DevOps'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  sync:
+    name: Sync Work Item #${{ github.event.inputs.work_item_id }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run AI sync
+        run: |
+          ARGS="--id ${{ github.event.inputs.work_item_id }} --app ${{ github.event.inputs.app_context }}"
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          npm run sync:azure -- $ARGS
+        env:
+          AZURE_DEVOPS_ORG: ${{ secrets.AZURE_DEVOPS_ORG }}
+          AZURE_DEVOPS_PROJECT: ${{ secrets.AZURE_DEVOPS_PROJECT }}
+          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+          AI_PROVIDER: ${{ secrets.AI_PROVIDER }}
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
+          AZURE_OPENAI_API_VERSION: ${{ secrets.AZURE_OPENAI_API_VERSION }}
+          DYN365_BaseURL: ${{ secrets.DYN365_BaseURL }}
+          DYN365_TEST_ORG_URL: ${{ secrets.DYN365_TEST_ORG_URL }}
+          DYN365_USER_NAME: ${{ secrets.DYN365_USER_NAME }}
+          DYN365_PASSWORD: ${{ secrets.DYN365_PASSWORD }}
+          DYN365_TEST_USER_NAME: ${{ secrets.DYN365_TEST_USER_NAME }}
+          DYN365_TEST_PASSWORD: ${{ secrets.DYN365_TEST_PASSWORD }}
+          INVENTORY_MGMT_URL: ${{ secrets.INVENTORY_MGMT_URL }}
+          INVENTORY_MGMT_USER_NAME: ${{ secrets.INVENTORY_MGMT_USER_NAME }}
+          INVENTORY_MGMT_PASSWORD: ${{ secrets.INVENTORY_MGMT_PASSWORD }}
+
+      - name: Upload generated spec files
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-specs-${{ github.event.inputs.work_item_id }}
+          path: |
+            tests/crm/*.spec.ts
+            tests/inventory/*.spec.ts
+            tests/**/*.manifest.json
+          retention-days: 30
+
+      - name: Commit generated files (if not dry run)
+        if: github.event.inputs.dry_run == 'false'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'feat(tests): AI-generated specs for US-${{ github.event.inputs.work_item_id }} [skip ci]'
+          file_pattern: 'tests/**/*.spec.ts tests/**/*.manifest.json'
+          branch: 'feature/US-${{ github.event.inputs.work_item_id }}-ai-generated-tests'
+          create_branch: true
